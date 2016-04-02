@@ -20,10 +20,10 @@ class TokenlyAPI
         $this->client_secret            = $client_secret;
     }
     
-    public function get($url, $parameters) {
+    public function get($url, $parameters=[]) {
         return $this->call('GET', $url, $parameters);
     }
-    public function getPublic($url, $parameters) {
+    public function getPublic($url, $parameters=[]) {
         return $this->call('GET', $url, $parameters, ['public' => true]);
     }
     public function post($url, $parameters) {
@@ -35,7 +35,7 @@ class TokenlyAPI
     public function patch($url, $parameters) {
         return $this->call('PATCH', $url, $parameters);
     }
-    public function delete($url, $parameters) {
+    public function delete($url, $parameters=[]) {
         return $this->call('DELETE', $url, $parameters);
     }
 
