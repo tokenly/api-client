@@ -1,6 +1,8 @@
-Tokenly API client.
+# Tokenly API client.
 
 Use this client for various Tokenly APIs.
+
+[![Build Status](https://travis-ci.org/tokenly/api-client.svg?branch=master)](https://travis-ci.org/tokenly/api-client)
 
 # Installation
 
