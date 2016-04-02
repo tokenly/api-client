@@ -30,6 +30,25 @@ class AuthenticatedAPITest extends PHPUnit_Framework_TestCase
         PHPUnit::assertEquals($expected_signature, $headers_generated['X-TOKENLY-AUTH-SIGNATURE']);
     } 
 
+    public function testPublicAPICall() {
+        $generator = new Generator();
+        $api = Phake::partialMock('Tokenly\APIClient\TokenlyAPI', 'https://127.0.0.1/api/v1', $generator, 'MY_CLIENT_ID', 'MY_CLIENT_SECRET');
+
+        $headers_generated = [];
+        Phake::when($api)->callRequest(Phake::anyParameters())->thenReturnCallback(function($url, $headers, $body, $method, $options) use (&$headers_generated) {
+            $response = new Requests_Response();
+            $response->body = json_encode(['sample' => 'output']);
+            $headers_generated = $headers;
+            return $response;
+        });
+
+        $result = $api->getPublic('method/one', ['foo' => 'bar']);
+        PHPUnit::assertEquals(['sample' => 'output'], $result);
+
+        // check headers
+        PHPUnit::assertEmpty($headers_generated);
+    } 
+
 
     // ------------------------------------------------------------------------
     

@@ -23,6 +23,9 @@ class TokenlyAPI
     public function get($url, $parameters) {
         return $this->call('GET', $url, $parameters);
     }
+    public function getPublic($url, $parameters) {
+        return $this->call('GET', $url, $parameters, ['public' => true]);
+    }
     public function post($url, $parameters) {
         return $this->call('POST', $url, $parameters);
     }
@@ -36,23 +39,30 @@ class TokenlyAPI
         return $this->call('DELETE', $url, $parameters);
     }
 
-    public function call($method, $url, $parameters) {
+    public function call($method, $url, $parameters, $options=[]) {
         $full_url = $this->api_base_url.'/'.rtrim($url, '/');
-        return $this->fetchFromAPI($method, $full_url, $parameters);
+        return $this->fetchFromAPI($method, $full_url, $parameters, $options);
     }
 
     // ------------------------------------------------------------------------
     
-    protected function fetchFromAPI($method, $url, $parameters=[], $post_type='json') {
-        $headers = $this->buildAuthenticationHeaders($method, $url, $parameters);
+    protected function fetchFromAPI($method, $url, $parameters=[], $options=[]) {
+        $options = array_merge([
+            'post_type' => 'json',
+        ], $options);
 
-        $options = [];
+        $headers = [];
+        if (!isset($options['public']) OR $options['public'] == false) {
+            $headers = $this->buildAuthenticationHeaders($method, $url, $parameters, $headers);
+        }
+
+        $request_options = [];
 
         // build body
         if ($method == 'GET') {
             $request_params = $parameters;
         } else {
-            if ($post_type == 'json') {
+            if ($options['post_type'] == 'json') {
                 $headers['Content-Type'] = 'application/json';
                 $headers['Accept'] = 'application/json';
                 if ($parameters) {
@@ -73,7 +83,7 @@ class TokenlyAPI
 
         // send request
         try {
-            $response = $this->callRequest($url, $headers, $request_params, $method, $options);
+            $response = $this->callRequest($url, $headers, $request_params, $method, $request_options);
         } catch (Exception $e) {
             throw $e;
         }
@@ -114,9 +124,7 @@ class TokenlyAPI
         return $json;
     }
 
-    protected function buildAuthenticationHeaders($method, $url, $parameters) {
-        $headers = [];
-
+    protected function buildAuthenticationHeaders($method, $url, $parameters, $headers=[]) {
         if (!is_null($this->authentication_generator)) {
             $headers = $this->authentication_generator->addSignatureToHeadersArray($method, $url, $parameters, $this->client_id, $this->client_secret, $headers);
         }
@@ -125,8 +133,8 @@ class TokenlyAPI
     }
 
     // for testing
-    protected function callRequest($url, $headers, $request_params, $method, $options) {
-        return Requests::request($url, $headers, $request_params, $method, $options);
+    protected function callRequest($url, $headers, $request_params, $method, $request_options) {
+        return Requests::request($url, $headers, $request_params, $method, $request_options);
     }
 
 }
