@@ -29,6 +29,9 @@ class TokenlyAPI
     public function post($url, $parameters) {
         return $this->call('POST', $url, $parameters);
     }
+    public function postPublic($url, $parameters) {
+        return $this->call('POST', $url, $parameters, ['public' => true]);
+    }
     public function put($url, $parameters) {
         return $this->call('PUT', $url, $parameters);
     }
