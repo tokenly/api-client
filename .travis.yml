@@ -4,3 +4,7 @@ php:
   - "7.0"
 before_script:
   - composer install
+
+addons:
+    code_climate:
+        repo_token: 7430bab280ff8f975aba066ee61dd58c7641be9b14a82ab4e74bd31b44241690
