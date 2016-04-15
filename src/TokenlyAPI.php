@@ -13,11 +13,14 @@ class TokenlyAPI
     public $client_secret = null;
     public $api_base_url  = '';
 
-    function __construct($api_base_url, Generator $authentication_generator=null, $client_id=null, $client_secret=null) {
-        $this->api_base_url             = $api_base_url;
-        $this->authentication_generator = $authentication_generator;
-        $this->client_id                = $client_id;
-        $this->client_secret            = $client_secret;
+    private $auth_generator = null;
+
+    function __construct($api_base_url, Generator $auth_generator=null, $client_id=null, $client_secret=null) {
+        $this->api_base_url   = $api_base_url;
+        $this->client_id      = $client_id;
+        $this->client_secret  = $client_secret;
+
+        $this->auth_generator = $auth_generator;
     }
     
     public function get($url, $parameters=[]) {
@@ -54,54 +57,83 @@ class TokenlyAPI
             'post_type' => 'json',
         ], $options);
 
+        // get the headers and request params
+        list($headers, $request_params) = $this->buildRequestHeadersAndParams($method, $url, $parameters, $options);
+
+        // send request
+        $request_options = [];
+        $response = $this->callRequest($url, $headers, $request_params, $method, $request_options);
+
+        // decode json
+        $json = $this->decodeJsonFromResponse($response->body);
+
+        // look for 400 - 500 errors
+        $this->checkForErrorsInResponse($response, $json);
+
+        return $json;
+    }
+
+    protected function buildRequestHeadersAndParams($method, $url, $parameters, $options) {
         $headers = [];
         if (!isset($options['public']) OR $options['public'] == false) {
             $headers = $this->buildAuthenticationHeaders($method, $url, $parameters, $headers);
         }
 
-        $request_options = [];
-
         // build body
         if ($method == 'GET') {
             $request_params = $parameters;
-        } else {
+        }
+
+        if ($method != 'GET') {
+            // default to form fields (x-www-form-urlencoded)
+            $request_params = $parameters;
+
             if ($options['post_type'] == 'json') {
+                // override request params
                 $headers['Content-Type'] = 'application/json';
                 $headers['Accept'] = 'application/json';
                 if ($parameters) {
-                    if($method == 'DELETE'){
+                    if ($method == 'DELETE'){
                         $request_params = $parameters;
                     }
-                    else{
+
+                    if ($method != 'DELETE'){
                         $request_params = json_encode($parameters);
                     }
-                } else {
+                }
+
+                if (!$parameters) {
                     $request_params = null;
                 }
-            } else {
-                // form fields (x-www-form-urlencoded)
-                $request_params = $parameters;
             }
         }
 
-        // send request
-        try {
-            $response = $this->callRequest($url, $headers, $request_params, $method, $request_options);
-        } catch (Exception $e) {
-            throw $e;
+        return [$headers, $request_params];
+
+    }
+
+    protected function buildAuthenticationHeaders($method, $url, $parameters, $headers=[]) {
+        if (!is_null($this->auth_generator)) {
+            $headers = $this->auth_generator->addSignatureToHeadersArray($method, $url, $parameters, $this->client_id, $this->client_secret, $headers);
         }
 
-        // decode json
+        return $headers;
+    }
+
+    protected function decodeJsonFromResponse($response_body) {
         try {
-            $json = json_decode($response->body, true);
+            $json = json_decode($response_body, true);
         } catch (Exception $parse_json_exception) {
             // could not parse json
-            $json = null;
             throw new APIException("Unexpected response", 1);
         }
 
-        // look for 400 - 500 errors
+        return $json;
+    }
+
+    protected function checkForErrorsInResponse($response, $json) {
         $is_bad_status_code = ($response->status_code >= 400 AND $response->status_code < 600);
+
         $error_message = null;
         $error_code = 1;
         if ($json) {
@@ -123,16 +155,6 @@ class TokenlyAPI
         if ($error_message !== null) {
             throw new APIException($error_message, $error_code);
         }
-
-        return $json;
-    }
-
-    protected function buildAuthenticationHeaders($method, $url, $parameters, $headers=[]) {
-        if (!is_null($this->authentication_generator)) {
-            $headers = $this->authentication_generator->addSignatureToHeadersArray($method, $url, $parameters, $this->client_id, $this->client_secret, $headers);
-        }
-
-        return $headers;
     }
 
     // for testing
