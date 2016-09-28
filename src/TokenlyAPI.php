@@ -52,17 +52,19 @@ class TokenlyAPI
 
     // ------------------------------------------------------------------------
     
-    protected function fetchFromAPI($method, $url, $parameters=[], $options=[]) {
+    protected function fetchFromAPI($method, $url, $parameters=[], $options=[], $request_options=[]) {
         $options = array_merge([
             'post_type' => 'json',
-            'timeout'   => 30,
         ], $options);
+
+        $request_options = array_merge([
+            'timeout'   => 30,
+        ], $request_options);
 
         // get the headers and request params
         list($headers, $request_params) = $this->buildRequestHeadersAndParams($method, $url, $parameters, $options);
 
         // send request
-        $request_options = [];
         $response = $this->callRequest($url, $headers, $request_params, $method, $request_options);
 
         // decode json
