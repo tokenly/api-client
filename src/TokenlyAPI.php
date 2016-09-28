@@ -16,7 +16,7 @@ class TokenlyAPI
     private $auth_generator = null;
 
     function __construct($api_base_url, Generator $auth_generator=null, $client_id=null, $client_secret=null) {
-        $this->api_base_url   = $api_base_url;
+        $this->api_base_url   = rtrim($api_base_url, '/');;
         $this->client_id      = $client_id;
         $this->client_secret  = $client_secret;
 
@@ -46,7 +46,7 @@ class TokenlyAPI
     }
 
     public function call($method, $url, $parameters, $options=[]) {
-        $full_url = $this->api_base_url.'/'.rtrim($url, '/');
+        $full_url = $this->api_base_url.'/'.trim($url, '/');
         return $this->fetchFromAPI($method, $full_url, $parameters, $options);
     }
 
@@ -55,6 +55,7 @@ class TokenlyAPI
     protected function fetchFromAPI($method, $url, $parameters=[], $options=[]) {
         $options = array_merge([
             'post_type' => 'json',
+            'timeout'   => 30,
         ], $options);
 
         // get the headers and request params
