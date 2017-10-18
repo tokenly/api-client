@@ -77,7 +77,7 @@ class TokenlyAPI
     }
 
     protected function buildRequestHeadersAndParams($method, $url, $parameters, $options) {
-        $headers = [];
+        $headers = isset($options['headers']) ? $options['headers'] : [];
         if (!isset($options['public']) OR $options['public'] == false) {
             $headers = $this->buildAuthenticationHeaders($method, $url, $parameters, $headers);
         }
