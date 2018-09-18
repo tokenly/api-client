@@ -13,6 +13,8 @@ class TokenlyAPI
     public $client_secret = null;
     public $api_base_url  = '';
 
+    protected $request_timeout = 30;
+
     private $auth_generator = null;
 
     function __construct($api_base_url, Generator $auth_generator=null, $client_id=null, $client_secret=null) {
@@ -21,6 +23,11 @@ class TokenlyAPI
         $this->client_secret  = $client_secret;
 
         $this->auth_generator = $auth_generator;
+    }
+
+    public function setRequestTimeout($request_timeout)
+    {
+        $this->request_timeout = $request_timeout;
     }
     
     public function get($url, $parameters=[]) {
@@ -45,9 +52,9 @@ class TokenlyAPI
         return $this->call('DELETE', $url, $parameters);
     }
 
-    public function call($method, $url, $parameters, $options=[]) {
+    public function call($method, $url, $parameters, $options=[], $request_options=[]) {
         $full_url = $this->api_base_url.'/'.trim($url, '/');
-        return $this->fetchFromAPI($method, $full_url, $parameters, $options);
+        return $this->fetchFromAPI($method, $full_url, $parameters, $options, $request_options);
     }
 
     // ------------------------------------------------------------------------
@@ -58,7 +65,7 @@ class TokenlyAPI
         ], $options);
 
         $request_options = array_merge([
-            'timeout'   => 30,
+            'timeout'   => $this->request_timeout,
         ], $request_options);
 
         // get the headers and request params
