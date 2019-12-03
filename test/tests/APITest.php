@@ -1,8 +1,9 @@
 <?php
 
-use \PHPUnit_Framework_Assert as PHPUnit;
+use \PHPUnit\Framework\Assert as PHPUnit;
+use PHPUnit\Framework\TestCase;
 
-class APITest extends PHPUnit_Framework_TestCase
+class APITest extends TestCase
 {
 
     public function testAPICall() {

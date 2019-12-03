@@ -1,9 +1,10 @@
 <?php
 
 use Tokenly\HmacAuth\Generator;
-use \PHPUnit_Framework_Assert as PHPUnit;
+use \PHPUnit\Framework\Assert as PHPUnit;
+use PHPUnit\Framework\TestCase;
 
-class AuthenticatedAPITest extends PHPUnit_Framework_TestCase
+class AuthenticatedAPITest extends TestCase
 {
 
     public function testAuthenticationHeaders() {
