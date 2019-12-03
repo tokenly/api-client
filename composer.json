@@ -13,7 +13,7 @@
     ],
     "require": {
         "php": ">=5.5.0",
-        "tokenly/hmac-auth": "dev-maser",
+        "tokenly/hmac-auth": "dev-master",
         "rmccue/requests": "^1.7|dev-master"
     },
     "require-dev": {
